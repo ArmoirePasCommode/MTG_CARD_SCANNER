@@ -10,3 +10,6 @@ env_variables:
 handlers:
   - url: /.*
     script: auto
+    
+automatic_scaling:
+  max_instances: 20
