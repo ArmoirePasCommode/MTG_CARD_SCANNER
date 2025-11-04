@@ -10,5 +10,3 @@ env_variables:
 handlers:
   - url: /.*
     script: auto
-
-
