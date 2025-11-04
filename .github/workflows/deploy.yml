@@ -57,6 +57,13 @@ jobs:
             }
           done
 
+      - name: Ensure latest version has 100% traffic
+        run: |
+          set -e
+          LATEST=$(gcloud app versions list --service=default --format="value(version.id)" --sort-by="~version.createTime" --limit=1)
+          echo "Latest version: $LATEST"
+          gcloud app services set-traffic default --splits $LATEST=1 --quiet
+
       - name: Wait for service to serve
         run: |
           set -e
