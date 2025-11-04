@@ -8,7 +8,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 export const cardRouter = Router();
 
 cardRouter.use(authMiddleware);
-cardRouter.post('/', upload.single('image'), addCard);
+cardRouter.post('/', (upload.single('image') as unknown as import('express').RequestHandler), addCard);
 cardRouter.get('/', listCards);
 cardRouter.delete('/:id', deleteCard);
 cardRouter.get('/sync', syncCards);

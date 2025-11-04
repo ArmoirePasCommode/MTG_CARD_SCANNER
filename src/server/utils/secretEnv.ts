@@ -26,7 +26,8 @@ export async function loadEnvFromSecretIfConfigured(): Promise<void> {
     const [access] = await client.accessSecretVersion({
       name: `projects/${projectId}/secrets/${secretName}/versions/latest`,
     });
-    const payload = access.payload?.data?.toString('utf8') || '';
+    const bytes = access.payload?.data as Uint8Array | undefined;
+    const payload = bytes ? Buffer.from(bytes).toString('utf8') : '';
     const parsed = parseDotenv(payload);
     for (const [k, v] of Object.entries(parsed)) {
       if (process.env[k] === undefined) {

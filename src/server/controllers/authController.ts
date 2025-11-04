@@ -48,7 +48,7 @@ export async function login(req: AuthenticatedRequest, res: Response) {
   if (snap.empty) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-  const doc = snap.docs[0];
+  const doc = snap.docs[0]!;
   const data = doc.data();
   const ok = await comparePassword(password, data.passwordHash);
   if (!ok) {
