@@ -57,9 +57,9 @@ jobs:
             }
           done
 
-      - name: Smoke test /health
+      - name: Smoke test /test
         run: |
-          curl -sSf https://mtg-card-scanner-477210.oa.r.appspot.com/health
+          curl -sSf https://mtg-card-scanner-477210.oa.r.appspot.com/test
 
       # Fallback for key-based auth (not recommended):
       # - name: Auth with service account key
