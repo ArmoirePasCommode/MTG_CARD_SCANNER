@@ -1,0 +1,7 @@
+﻿JWT_SECRET=replace-with-strong-secret
+JWT_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=30d
+GCP_PROJECT_ID=mtg-card-scanner-477210
+GCS_BUCKET=mtg-card-scanner-uploads-eu
+PORT=8080
+NODE_ENV=production

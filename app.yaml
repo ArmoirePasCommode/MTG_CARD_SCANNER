@@ -1,0 +1,14 @@
+runtime: nodejs20
+env: standard
+instance_class: F1
+
+env_variables:
+  NODE_ENV: "production"
+  # Only this is required; the service will fetch and load a .env-style secret
+  ENV_SECRET_NAME: "runtime-env"
+
+handlers:
+  - url: /.*
+    script: auto
+
+
