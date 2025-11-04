@@ -47,26 +47,38 @@ jobs:
         run: |
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
 
-      - name: Deploy to App Engine (retry up to 2x)
+      - name: Deploy to App Engine (no promote, retry up to 2x)
         run: |
           set -e
           for i in 1 2; do
-            gcloud app deploy --quiet --verbosity=debug --promote && break || {
+            gcloud app deploy --quiet --verbosity=debug --no-promote && break || {
               echo "Retry $i failed; sleeping..."
               sleep 20
             }
           done
 
-      - name: Ensure latest version has 100% traffic
+      - name: Probe new version by versioned URL
         run: |
           set -e
           LATEST=$(gcloud app versions list --service=default --format="value(version.id)" --sort-by="~version.createTime" --limit=1)
           echo "Latest version: $LATEST"
-          gcloud app services set-traffic default --splits $LATEST=1 --quiet
+          BASE="https://$LATEST-dot-default-dot-mtg-card-scanner-477210.oa.r.appspot.com"
+          echo "Probing ${BASE}/test"
+          for i in {1..30}; do
+            if curl -sSf "${BASE}/test" > /dev/null; then
+              echo "New version healthy"; exit 0; fi
+            echo "Not up yet, retry $i..."; sleep 6;
+          done
+          echo "New version did not become healthy in time"; exit 1
 
-      - name: Wait for service to serve
+      - name: Promote new version to 100% traffic
         run: |
           set -e
+          LATEST=$(gcloud app versions list --service=default --format="value(version.id)" --sort-by="~version.createTime" --limit=1)
+          gcloud app services set-traffic default --splits $LATEST=1 --quiet
+
+      - name: Final smoke test /test on default URL
+        run: |
           for i in {1..20}; do
             if curl -sSf https://mtg-card-scanner-477210.oa.r.appspot.com/test > /dev/null; then
               echo "Service is up"; exit 0; fi
