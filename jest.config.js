@@ -5,23 +5,22 @@ export default {
   testMatch: ['**/tests/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js'],
   verbose: true,
-  setupFiles: ['<rootDir>/tests/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.cjs'],
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        useESM: true,
         tsconfig: {
-          module: 'NodeNext',
-          moduleResolution: 'NodeNext',
+          module: 'CommonJS',
+          moduleResolution: 'Node',
           isolatedModules: true
         },
         diagnostics: { ignoreCodes: [151002] }
       }
     ]
   },
-  extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
+    // Allow importing TS files that use ESM-style .js suffix in paths
     '^(\\.{1,2}/.*)\\.js$': '$1'
   }
 };
