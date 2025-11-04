@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { authMiddleware } from '../middleware/auth';
-import { addCard, listCards, deleteCard, syncCards } from '../controllers/cardController';
+import { authMiddleware } from '../middleware/auth.js';
+import { addCard, listCards, deleteCard, syncCards } from '../controllers/cardController.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 

@@ -1,6 +1,6 @@
 import { Firestore } from '@google-cloud/firestore';
 import { Storage } from '@google-cloud/storage';
-import { env } from '../config';
+import { env } from '../config.js';
 
 const isTest = process.env.NODE_ENV === 'test';
 

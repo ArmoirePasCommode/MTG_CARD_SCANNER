@@ -1,4 +1,4 @@
-import { bucket } from '../db/firestore';
+import { bucket } from '../db/firestore.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function uploadImageBuffer(ownerId: string, buffer: Buffer, mimeType: string): Promise<string> {

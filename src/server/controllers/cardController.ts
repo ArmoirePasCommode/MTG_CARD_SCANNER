@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import { firestore } from '../db/firestore';
-import { AuthenticatedRequest } from '../middleware/auth';
-import { uploadImageBuffer } from '../services/storageService';
+import { firestore } from '../db/firestore.js';
+import { AuthenticatedRequest } from '../middleware/auth.js';
+import { uploadImageBuffer } from '../services/storageService.js';
 
 function nowIso(): string { return new Date().toISOString(); }
 

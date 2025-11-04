@@ -1,8 +1,8 @@
 import { Response } from 'express';
-import { firestore } from '../db/firestore';
-import { hashPassword, comparePassword } from '../utils/password';
-import { signAccessToken, signRefreshToken, verifyToken } from '../utils/jwt';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { firestore } from '../db/firestore.js';
+import { hashPassword, comparePassword } from '../utils/password.js';
+import { signAccessToken, signRefreshToken, verifyToken } from '../utils/jwt.js';
+import { AuthenticatedRequest } from '../middleware/auth.js';
 
 function nowIso(): string {
   return new Date().toISOString();
