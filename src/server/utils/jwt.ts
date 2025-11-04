@@ -7,12 +7,12 @@ export interface JwtPayload {
 }
 
 export function signAccessToken(payload: JwtPayload): string {
-  const options: SignOptions = { expiresIn: env.JWT_EXPIRES_IN };
+  const options: SignOptions = { expiresIn: env.JWT_EXPIRES_IN as unknown as any };
   return jwt.sign(payload as any, env.JWT_SECRET as unknown as Secret, options);
 }
 
 export function signRefreshToken(payload: JwtPayload): string {
-  const options: SignOptions = { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN };
+  const options: SignOptions = { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN as unknown as any };
   return jwt.sign({ ...payload, typ: 'refresh' } as any, env.JWT_SECRET as unknown as Secret, options);
 }
 
