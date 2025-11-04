@@ -47,9 +47,15 @@ jobs:
         run: |
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
 
-      - name: Deploy to App Engine
+      - name: Deploy to App Engine (with debug and multi-retry)
         run: |
-          gcloud app deploy --quiet
+          set -e
+          for i in 1 2 3 4 5; do
+            gcloud app deploy --quiet --verbosity=debug && break || {
+              echo "Retry $i failed; sleeping..."
+              sleep 30
+            }
+          done
 
       # Fallback for key-based auth (not recommended):
       # - name: Auth with service account key
