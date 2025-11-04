@@ -47,15 +47,19 @@ jobs:
         run: |
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
 
-      - name: Deploy to App Engine (with debug and multi-retry)
+      - name: Deploy to App Engine (retry up to 2x)
         run: |
           set -e
-          for i in 1 2 3 4 5; do
+          for i in 1 2; do
             gcloud app deploy --quiet --verbosity=debug && break || {
               echo "Retry $i failed; sleeping..."
-              sleep 30
+              sleep 20
             }
           done
+
+      - name: Smoke test /health
+        run: |
+          curl -sSf https://mtg-card-scanner-477210.oa.r.appspot.com/health
 
       # Fallback for key-based auth (not recommended):
       # - name: Auth with service account key

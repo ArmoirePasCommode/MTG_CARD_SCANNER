@@ -8,4 +8,3 @@ describe('Auth routes', () => {
   });
 });
 
-
