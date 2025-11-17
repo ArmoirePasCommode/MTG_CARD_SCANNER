@@ -79,3 +79,4 @@ jobs:
       - name: Post-deploy info
         run: |
           echo "Deployment triggered for ${SERVICE_URL}"
+          echo "Deployed version: $DEPLOY_VERSION"
