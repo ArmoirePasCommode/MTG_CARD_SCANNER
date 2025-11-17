@@ -47,11 +47,15 @@ jobs:
         run: |
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
 
+      - name: Set deploy version id
+        run: |
+          echo "DEPLOY_VERSION=gha-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_ENV
+
       - name: Deploy to App Engine (no promote, retry up to 2x)
         run: |
           set -e
           for i in 1 2; do
-            gcloud app deploy --quiet --verbosity=debug --no-promote && break || {
+            gcloud app deploy --quiet --verbosity=debug --no-promote --version="$DEPLOY_VERSION" && break || {
               echo "Retry $i failed; sleeping..."
               sleep 20
             }
@@ -60,9 +64,11 @@ jobs:
       - name: Probe new version by versioned URL
         run: |
           set -e
-          LATEST=$(gcloud app versions list --service=default --format="value(version.id)" --sort-by="~version.createTime" --limit=1)
-          echo "Latest version: $LATEST"
-          BASE="https://$LATEST-dot-default-dot-mtg-card-scanner-477210.oa.r.appspot.com"
+          if [ -z "$DEPLOY_VERSION" ]; then
+            echo "DEPLOY_VERSION missing"; exit 1;
+          fi
+          echo "Latest version: $DEPLOY_VERSION"
+          BASE="https://$DEPLOY_VERSION-dot-default-dot-mtg-card-scanner-477210.oa.r.appspot.com"
           echo "Probing ${BASE}/test"
           for i in {1..30}; do
             if curl -sSf "${BASE}/test" > /dev/null; then
@@ -74,8 +80,10 @@ jobs:
       - name: Promote new version to 100% traffic
         run: |
           set -e
-          LATEST=$(gcloud app versions list --service=default --format="value(version.id)" --sort-by="~version.createTime" --limit=1)
-          gcloud app services set-traffic default --splits $LATEST=1 --quiet
+          if [ -z "$DEPLOY_VERSION" ]; then
+            echo "DEPLOY_VERSION missing"; exit 1;
+          fi
+          gcloud app services set-traffic default --splits $DEPLOY_VERSION=1 --quiet
 
       - name: Final smoke test /test on default URL
         run: |
