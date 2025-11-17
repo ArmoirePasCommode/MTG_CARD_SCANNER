@@ -53,8 +53,11 @@ jobs:
 
       - name: Deploy to App Engine standard
         run: |
-          gcloud config set project "${GCP_PROJECT_ID}"
-          gcloud app deploy app.yaml --quiet
+          # Deploy directly to the target project and increase verbosity for better error messages
+          gcloud app deploy app.yaml \
+            --project="${GCP_PROJECT_ID}" \
+            --quiet \
+            --verbosity=debug
 
       - name: Check /test health endpoint
         run: |
