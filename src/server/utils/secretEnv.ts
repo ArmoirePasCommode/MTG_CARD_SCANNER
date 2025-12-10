@@ -39,7 +39,7 @@ export async function loadEnvFromSecretIfConfigured(): Promise<void> {
       }
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
+     
     console.warn('Warning: failed to load env from Secret Manager:', (e as Error).message);
   }
 }

@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "MTG Card Scanner",
+    "slug": "mtg-card-scanner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "mtgscanner",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow MTG Card Scanner to access your camera."
+        }
+      ],
+      "expo-secure-store",
+      "expo-image-picker"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.mtgcardscanner"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "package": "com.example.mtgcardscanner"
+    },
+    "extra": {
+      "backendUrl": "https://mtg-card-scanner-477210.oa.r.appspot.com",
+      "scryfallBaseUrl": "https://api.scryfall.com"
+    },
+    "owner": "local-dev"
+  }
+}
+

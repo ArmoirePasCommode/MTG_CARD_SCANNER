@@ -39,6 +39,9 @@ yarn
 yarn dev
 ```
 
+### Mobile Frontend
+The Expo-based React Native client lives in `mobile/` and is configured to use the deployed backend at `https://mtg-card-scanner-477210.oa.r.appspot.com` by default. See `mobile/README.md` for setup, environment variables, and connectivity tests.
+
 ### Environment Variables (App Engine)
 Configure via App Engine `app.yaml` and/or Secret Manager:
 - `JWT_SECRET`
@@ -64,4 +67,3 @@ This repo includes `.github/workflows/deploy.yml` that:
 - Deploys to App Engine Standard
 
 See comments in the workflow file for setup steps.
-
