@@ -7,7 +7,6 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "gcp-build": "tsc -p tsconfig.json",
     "test": "jest --runInBand",
     "lint": "eslint src/**/*.ts"
   },
