@@ -15,7 +15,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "plugins": [
       [
         "expo-camera",

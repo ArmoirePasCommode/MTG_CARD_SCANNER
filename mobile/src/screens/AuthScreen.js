@@ -49,7 +49,7 @@ const AuthScreen = () => {
         {mode === 'register' ? (
           <FormInput
             label="Display name"
-            placeholder="Chandra Nalaar"
+            placeholder="Username"
             value={form.displayName}
             onChangeText={(text) => handleChange('displayName', text)}
             autoCapitalize="words"
