@@ -8,3 +8,4 @@ tests/**
 runtime-env.txt
 gha-creds-*.json
 mobile/
+package-lock.json
