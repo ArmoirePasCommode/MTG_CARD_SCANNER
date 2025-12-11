@@ -41,6 +41,9 @@
       "backendUrl": "https://mtg-card-scanner-477210.oa.r.appspot.com",
       "scryfallBaseUrl": "https://api.scryfall.com"
     },
-    "owner": "local-dev"
+    "owner": "local-dev",
+    "web": {
+      "bundler": "metro"
+    }
   }
 }
