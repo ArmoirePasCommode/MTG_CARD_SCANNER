@@ -7,3 +7,4 @@ tests/**
 **/*.map
 runtime-env.txt
 gha-creds-*.json
+mobile/
