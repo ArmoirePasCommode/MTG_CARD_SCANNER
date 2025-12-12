@@ -34,12 +34,15 @@ export async function loadEnvFromSecretIfConfigured(): Promise<void> {
     }
     const parsed = parseDotenv(payload);
     for (const [k, v] of Object.entries(parsed)) {
+      // Prevent overwriting credentials with a local file path that doesn't exist
+      if (k === 'GOOGLE_APPLICATION_CREDENTIALS') continue;
+
       if (process.env[k] === undefined) {
         process.env[k] = v;
       }
     }
   } catch (e) {
-     
+
     console.warn('Warning: failed to load env from Secret Manager:', (e as Error).message);
   }
 }

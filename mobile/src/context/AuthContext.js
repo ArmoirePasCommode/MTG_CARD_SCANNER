@@ -1,5 +1,32 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+
+// Helper to safely access SecureStore
+const safeSecureStore = {
+  getItemAsync: async (key) => {
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      console.warn('SecureStore.getItemAsync failed - native module might be missing', error);
+      return null;
+    }
+  },
+  setItemAsync: async (key, value) => {
+    try {
+      return await SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      console.warn('SecureStore.setItemAsync failed - native module might be missing', error);
+    }
+  },
+  deleteItemAsync: async (key) => {
+    try {
+      return await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      console.warn('SecureStore.deleteItemAsync failed - native module might be missing', error);
+    }
+  }
+};
 
 import { loginRequest, registerRequest, setAuthToken, fetchProfile } from '../services/api';
 
@@ -22,7 +49,7 @@ export const AuthProvider = ({ children }) => {
 
   const bootstrap = useCallback(async () => {
     try {
-      const storedToken = await SecureStore.getItemAsync(STORAGE_KEY);
+      const storedToken = await safeSecureStore.getItemAsync(STORAGE_KEY);
       if (storedToken) {
         setAuthToken(storedToken);
         setToken(storedToken);
@@ -42,9 +69,9 @@ export const AuthProvider = ({ children }) => {
 
   const persistToken = async (newToken) => {
     if (newToken) {
-      await SecureStore.setItemAsync(STORAGE_KEY, newToken);
+      await safeSecureStore.setItemAsync(STORAGE_KEY, newToken);
     } else {
-      await SecureStore.deleteItemAsync(STORAGE_KEY);
+      await safeSecureStore.deleteItemAsync(STORAGE_KEY);
     }
   };
 

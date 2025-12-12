@@ -39,7 +39,11 @@ export async function signup(req: AuthenticatedRequest, res: Response) {
     });
   } catch (error: any) {
     console.error('Signup error:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+    // DEBUG: returning full error object to client
+    return res.status(500).json({
+      error: error.message || 'Internal server error',
+      details: error.stack
+    });
   }
 }
 
@@ -69,7 +73,11 @@ export async function login(req: AuthenticatedRequest, res: Response) {
     });
   } catch (error: any) {
     console.error('Login error:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+    // DEBUG: returning full error object to client
+    return res.status(500).json({
+      error: error.message || 'Internal server error',
+      details: error.stack
+    });
   }
 }
 
