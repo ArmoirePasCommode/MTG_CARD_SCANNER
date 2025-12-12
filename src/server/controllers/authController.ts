@@ -80,4 +80,27 @@ export async function refresh(req: AuthenticatedRequest, res: Response) {
   }
 }
 
+export async function getProfile(req: AuthenticatedRequest, res: Response) {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  try {
+    const userDoc = await firestore.collection('users').doc(req.user.id).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const data = userDoc.data() || {};
+    return res.status(200).json({
+      id: userDoc.id,
+      email: data.email,
+      username: data.username,
+      createdAt: data.createdAt
+    });
+  } catch (err) {
+    console.error('getProfile error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
 

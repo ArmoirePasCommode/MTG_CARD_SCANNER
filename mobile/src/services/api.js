@@ -27,7 +27,7 @@ const getErrorMessage = (error) => {
 
 export const loginRequest = async ({ email, password }) => {
   try {
-    const { data } = await client.post('/auth/login', { email, password });
+    const { data } = await client.post('/api/auth/login', { email, password });
     return data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -36,7 +36,7 @@ export const loginRequest = async ({ email, password }) => {
 
 export const registerRequest = async ({ email, password, displayName }) => {
   try {
-    const { data } = await client.post('/auth/register', { email, password, displayName });
+    const { data } = await client.post('/api/auth/signup', { email, password, username: displayName });
     return data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -45,7 +45,7 @@ export const registerRequest = async ({ email, password, displayName }) => {
 
 export const fetchProfile = async () => {
   try {
-    const { data } = await client.get('/auth/me');
+    const { data } = await client.get('/api/auth/me');
     return data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

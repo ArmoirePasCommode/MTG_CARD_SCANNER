@@ -5,7 +5,9 @@ import { cardRouter } from './routes/cardRoutes.js';
 
 export const app = express();
 
-app.use(cors({ origin: true }));
+app.use(cors({ origin: true, credentials: true }));
+app.options('*', cors());
+
 app.use(express.json({ limit: '2mb' }));
 
 app.get('/test', (_req, res) => res.status(200).json({ ok: true }));

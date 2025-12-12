@@ -9,10 +9,10 @@ const AuthContext = createContext({
   user: null,
   token: null,
   initializing: true,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  refreshProfile: async () => {}
+  login: async () => { },
+  register: async () => { },
+  logout: async () => { },
+  refreshProfile: async () => { }
 });
 
 export const AuthProvider = ({ children }) => {
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = useCallback(async (email, password) => {
-    const { token: authToken, user: authUser } = await loginRequest({ email, password });
+    const { accessToken: authToken, user: authUser } = await loginRequest({ email, password });
     setAuthToken(authToken);
     setToken(authToken);
     setUser(authUser);
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = useCallback(async (payload) => {
-    const { token: authToken, user: authUser } = await registerRequest(payload);
+    const { accessToken: authToken, user: authUser } = await registerRequest(payload);
     setAuthToken(authToken);
     setToken(authToken);
     setUser(authUser);
