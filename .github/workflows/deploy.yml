@@ -57,8 +57,14 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
-      - name: Verify Authenticated Identity
-        run: gcloud config list account
+      - name: Verify Authenticated Identity & Roles
+        run: |
+          current_account=$(gcloud config list account --format="value(core.account)")
+          echo "Checking roles for: $current_account"
+          gcloud projects get-iam-policy ${{ env.GCP_PROJECT_ID }} \
+            --flatten="bindings[].members" \
+            --format="table(bindings.role)" \
+            --filter="bindings.members:serviceAccount:$current_account"
 
       - name: Deploy to App Engine
         run: |
