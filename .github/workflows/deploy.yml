@@ -52,7 +52,7 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDP }}
           service_account: ${{ secrets.GCP_DEPLOY_SA }}
 
-      - name: Set up gcloud
+      - name: Set up gcloud (setup)
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
