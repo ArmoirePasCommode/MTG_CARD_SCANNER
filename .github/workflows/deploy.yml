@@ -57,6 +57,9 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Verify Authenticated Identity
+        run: gcloud config list account
+
       - name: Deploy to App Engine
         run: |
           # Deploy directly to the target project and increase verbosity for better error messages
