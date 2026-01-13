@@ -65,6 +65,18 @@ jobs:
             --quiet \
             --verbosity=debug
 
+      - name: Show Cloud Build logs on failure
+        if: failure()
+        run: |
+          echo "Fetching recent Cloud Build logs..."
+          gcloud builds list --limit=5 --sort-by=CREATE_TIME --format="table(id,status,createTime,logUrl)"
+          echo "Attempting to show logs for the latest failed build..."
+          latest_build_id=$(gcloud builds list --limit=1 --sort-by=CREATE_TIME --format="value(id)")
+          if [ -n "$latest_build_id" ]; then
+            echo "Logs for build $latest_build_id:"
+            gcloud logging read "resource.type=build AND resource.labels.build_id=$latest_build_id" --limit=20 --format="value(textPayload)"
+          fi
+
       - name: Check /test health endpoint
         run: |
           echo "Waiting for service to become ready..."
