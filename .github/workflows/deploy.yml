@@ -57,7 +57,7 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
-      - name: Deploy to App Engine standard
+      - name: Deploy to App Engine
         run: |
           # Deploy directly to the target project and increase verbosity for better error messages
           gcloud app deploy app.yaml \
