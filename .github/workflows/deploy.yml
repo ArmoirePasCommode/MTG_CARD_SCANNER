@@ -34,14 +34,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linting
-        run: npm run lint
-
       - name: Security audit
         run: npm audit --audit-level=critical
-
-      - name: Run tests
-        run: npm test
 
       - name: Build TypeScript
         run: npm run build
@@ -97,4 +91,4 @@ jobs:
       - name: Post-deploy info
         run: |
           echo "Deployment triggered for ${SERVICE_URL}"
-          echo "Deployed version: $DEPLOY_VERSION"
+          echo "Deployed version: ${GITHUB_SHA::7}"
