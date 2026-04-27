@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
 const BACKEND_URL =
@@ -6,96 +6,154 @@ const BACKEND_URL =
   Constants?.expoConfig?.extra?.backendUrl ||
   'http://localhost:8080';
 
-const client = axios.create({
-  baseURL: BACKEND_URL,
-  timeout: 10000
-});
+const DEFAULT_TIMEOUT_MS = 15000;
+
+let _authToken = null;
 
 export const setAuthToken = (token) => {
-  if (token) {
-    client.defaults.headers.common.Authorization = `Bearer ${token}`;
-  } else {
-    delete client.defaults.headers.common.Authorization;
+  _authToken = token || null;
+};
+
+export const getAuthToken = () => _authToken;
+
+const buildHeaders = (extra = {}) => {
+  const headers = { Accept: 'application/json', ...extra };
+  if (_authToken) headers.Authorization = `Bearer ${_authToken}`;
+  return headers;
+};
+
+const withTimeout = (signal, timeoutMs = DEFAULT_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (signal) {
+    signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
+  return {
+    signal: controller.signal,
+    cancel: () => clearTimeout(timer),
+  };
 };
 
-const getErrorMessage = (error) => {
-  if (error.response?.data?.message) return error.response.data.message;
-  if (error.response?.data?.error) return error.response.data.error;
-  if (error.message) return error.message;
-  return 'Unexpected error';
-};
-
-export const loginRequest = async ({ email, password }) => {
+const parseError = async (response) => {
+  let payload = null;
   try {
-    const { data } = await client.post('/api/auth/login', { email, password });
-    return data;
+    payload = await response.json();
+  } catch {
+    // body wasn't JSON
+  }
+  const message =
+    payload?.error ||
+    payload?.message ||
+    `Request failed with status ${response.status}`;
+  const err = new Error(message);
+  err.status = response.status;
+  err.payload = payload;
+  return err;
+};
+
+const request = async (path, { method = 'GET', body, headers, timeoutMs, signal } = {}) => {
+  const url = path.startsWith('http') ? path : `${BACKEND_URL}${path}`;
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  const finalHeaders = buildHeaders({
+    ...(body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
+    ...headers,
+  });
+
+  const { signal: timedSignal, cancel } = withTimeout(signal, timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: finalHeaders,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
+      signal: timedSignal,
+    });
+
+    if (!response.ok) {
+      throw await parseError(response);
+    }
+
+    if (response.status === 204) return null;
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await response.json();
+    }
+    return await response.text();
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    if (error?.name === 'AbortError') {
+      throw new Error('Request timed out. Check your connection and try again.');
+    }
+    throw error;
+  } finally {
+    cancel();
   }
 };
 
-export const registerRequest = async ({ email, password, displayName }) => {
-  try {
-    const { data } = await client.post('/api/auth/signup', { email, password, username: displayName });
-    return data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+export const loginRequest = ({ email, password }) =>
+  request('/api/auth/login', { method: 'POST', body: { email, password } });
 
-export const fetchProfile = async () => {
-  try {
-    const { data } = await client.get('/api/auth/me');
-    return data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+export const registerRequest = ({ email, password, displayName }) =>
+  request('/api/auth/signup', {
+    method: 'POST',
+    body: { email, password, username: displayName },
+  });
 
-export const addCard = async (cardPayload) => {
-  try {
-    const { data } = await client.post('/api/cards', cardPayload);
-    return data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+export const fetchProfile = () => request('/api/auth/me');
 
-export const getCards = async () => {
-  try {
-    const { data } = await client.get('/api/cards');
-    return data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+export const addCard = (cardPayload) =>
+  request('/api/cards', { method: 'POST', body: cardPayload });
 
-export const deleteCard = async (cardId) => {
-  try {
-    await client.delete(`/api/cards/${cardId}`);
-    return true;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-};
+export const updateCard = (cardId, patch) =>
+  request(`/api/cards/${cardId}`, { method: 'PATCH', body: patch });
+
+export const bulkAddCards = (cards) =>
+  request('/api/cards/bulk', { method: 'POST', body: { cards } });
+
+export const tagCards = ({ cardIds, add, remove }) =>
+  request('/api/cards/tag', { method: 'POST', body: { cardIds, add, remove } });
+
+export const getCards = () => request('/api/cards');
+
+export const deleteCard = (cardId) =>
+  request(`/api/cards/${cardId}`, { method: 'DELETE' });
+
+export const getTags = () => request('/api/tags');
+
+export const renameTag = (from, to) =>
+  request('/api/tags/rename', { method: 'POST', body: { from, to } });
+
+export const deleteTag = (name) =>
+  request(`/api/tags/${encodeURIComponent(name)}`, { method: 'DELETE' });
 
 /**
  * Sends a card image to the backend OCR endpoint.
  * Returns { text: string, cardName: string }
  */
-export const recognizeCardImage = async ({ uri, mimeType = 'image/jpeg', fileName = 'card.jpg' }) => {
-  try {
-    const formData = new FormData();
-    formData.append('image', { uri, type: mimeType, name: fileName });
-    const { data } = await client.post('/api/cards/recognize', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 20000
-    });
-    return data;
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
+export const recognizeCardImage = ({ uri, mimeType = 'image/jpeg', fileName = 'card.jpg' }) => {
+  const formData = new FormData();
+  formData.append('image', { uri, type: mimeType, name: fileName });
+  return request('/api/cards/recognize', {
+    method: 'POST',
+    body: formData,
+    timeoutMs: 30000,
+  });
 };
 
-export default client;
+export default {
+  loginRequest,
+  registerRequest,
+  fetchProfile,
+  addCard,
+  updateCard,
+  bulkAddCards,
+  tagCards,
+  getCards,
+  deleteCard,
+  getTags,
+  renameTag,
+  deleteTag,
+  recognizeCardImage,
+  setAuthToken,
+  getAuthToken,
+};
