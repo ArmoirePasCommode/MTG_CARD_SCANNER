@@ -30,6 +30,13 @@ const CardDetailsScreen = ({ route, navigation }) => {
 
   const isInCollection = !fromScan && Boolean(card?.id);
 
+  /** Stable key for "which card" — changes only when navigating to a different card, not on context refetches. */
+  const cardRouteKey = useMemo(() => {
+    if (!card) return '';
+    if (card.id) return `id:${card.id}`;
+    return `lookup:${String(card.scryfallId || '')}::${String(card.name || '')}`;
+  }, [card?.id, card?.scryfallId, card?.name]);
+
   const [quantity, setQuantity] = useState(Math.max(1, card?.quantity || 1));
   const [isFoil, setIsFoil] = useState(card?.isFoil === true);
   const [tags, setTags] = useState(Array.isArray(card?.tags) ? card.tags : []);
@@ -46,6 +53,26 @@ const CardDetailsScreen = ({ route, navigation }) => {
   });
 
   const debounceTimer = useRef(null);
+
+  // `useState` init runs only on mount; reset when navigating to a different card.
+  // Depend only on `cardRouteKey`, not `card` — a context refetch can replace the same card with
+  // a new object reference; we must not reset quantity/foil/tags in that case.
+  useEffect(() => {
+    if (!card || !cardRouteKey) return;
+    const q = Math.max(1, card.quantity || 1);
+    const foil = card.isFoil === true;
+    const nextTags = Array.isArray(card.tags) ? [...card.tags] : [];
+    setQuantity(q);
+    setIsFoil(foil);
+    setTags(nextTags);
+    initialState.current = { quantity: q, isFoil: foil, tags: nextTags };
+    setSaving(false);
+    setSaved(false);
+    setSaveError(null);
+    setUpdateError(null);
+    setUpdateSavedAt(null);
+    clearTimeout(debounceTimer.current);
+  }, [cardRouteKey]); // card read from current render when key changes
 
   const dirty = useMemo(() => {
     if (!isInCollection) return false;
