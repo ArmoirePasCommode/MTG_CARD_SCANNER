@@ -14,33 +14,40 @@ export async function addCard(req: AuthenticatedRequest, res: Response) {
     return res.status(400).json({ error: 'Missing field: name' });
   }
 
-  let imageUrl: string | null = null;
-  // multer stores buffer on req.file when using memoryStorage
-  const file = (req as any).file as Express.Multer.File | undefined;
-  if (file && file.buffer && file.mimetype) {
-    imageUrl = await uploadImageBuffer(user.id, file.buffer, file.mimetype);
+  try {
+    let imageUrl: string | null = null;
+    const file = (req as any).file as Express.Multer.File | undefined;
+    if (file && file.buffer && file.mimetype) {
+      imageUrl = await uploadImageBuffer(user.id, file.buffer, file.mimetype);
+    }
+
+    const card = {
+      name,
+      edition: edition || null,
+      rarity: rarity || null,
+      imageUrl,
+      ownerId: user.id,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    };
+
+    const ref = await firestore.collection('cards').add(card);
+    return res.status(201).json({ id: ref.id, ...card });
+  } catch (e) {
+    return res.status(500).json({ error: (e as Error).message });
   }
-
-  const card = {
-    name,
-    edition: edition || null,
-    rarity: rarity || null,
-    imageUrl,
-    ownerId: user.id,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-  };
-
-  const ref = await firestore.collection('cards').add(card);
-  return res.status(201).json({ id: ref.id, ...card });
 }
 
 export async function listCards(req: AuthenticatedRequest, res: Response) {
   const user = req.user;
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
-  const snap = await firestore.collection('cards').where('ownerId', '==', user.id).orderBy('createdAt', 'desc').get();
-  const cards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  return res.status(200).json(cards);
+  try {
+    const snap = await firestore.collection('cards').where('ownerId', '==', user.id).orderBy('createdAt', 'desc').get();
+    const cards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return res.status(200).json(cards);
+  } catch (e) {
+    return res.status(500).json({ error: (e as Error).message });
+  }
 }
 
 export async function deleteCard(req: AuthenticatedRequest, res: Response) {
@@ -48,12 +55,16 @@ export async function deleteCard(req: AuthenticatedRequest, res: Response) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   const { id } = req.params;
   if (!id) return res.status(400).json({ error: 'Missing card id' });
-  const ref = firestore.collection('cards').doc(id);
-  const doc = await ref.get();
-  if (!doc.exists) return res.status(404).json({ error: 'Not found' });
-  if (doc.data()?.ownerId !== user.id) return res.status(403).json({ error: 'Forbidden' });
-  await ref.delete();
-  return res.status(204).send();
+  try {
+    const ref = firestore.collection('cards').doc(id);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    if (doc.data()?.ownerId !== user.id) return res.status(403).json({ error: 'Forbidden' });
+    await ref.delete();
+    return res.status(204).send();
+  } catch (e) {
+    return res.status(500).json({ error: (e as Error).message });
+  }
 }
 
 export async function syncCards(req: AuthenticatedRequest, res: Response) {
@@ -63,14 +74,18 @@ export async function syncCards(req: AuthenticatedRequest, res: Response) {
   if (!since) {
     return res.status(400).json({ error: 'Missing query param: since (ISO string)' });
   }
-  const q = await firestore
-    .collection('cards')
-    .where('ownerId', '==', user.id)
-    .where('updatedAt', '>', since)
-    .orderBy('updatedAt', 'asc')
-    .get();
-  const cards = q.docs.map(d => ({ id: d.id, ...d.data() }));
-  return res.status(200).json({ changes: cards, cursor: nowIso() });
+  try {
+    const q = await firestore
+      .collection('cards')
+      .where('ownerId', '==', user.id)
+      .where('updatedAt', '>', since)
+      .orderBy('updatedAt', 'asc')
+      .get();
+    const cards = q.docs.map(d => ({ id: d.id, ...d.data() }));
+    return res.status(200).json({ changes: cards, cursor: nowIso() });
+  } catch (e) {
+    return res.status(500).json({ error: (e as Error).message });
+  }
 }
 
 
