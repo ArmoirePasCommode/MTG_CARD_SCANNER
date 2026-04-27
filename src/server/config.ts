@@ -18,6 +18,7 @@ export const env = {
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
   GCP_PROJECT_ID: requireEnv('GCP_PROJECT_ID', true),
   GCS_BUCKET: requireEnv('GCS_BUCKET') as string,
+  FIRESTORE_DATABASE_ID: requireEnv('FIRESTORE_DATABASE_ID', true),
 };
 
 
