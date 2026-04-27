@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { firestore } from '../db/firestore.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { uploadImageBuffer } from '../services/storageService.js';
+import { extractCardName, extractTextFromBuffer } from '../services/visionService.js';
 
 function nowIso(): string { return new Date().toISOString(); }
 
@@ -62,6 +63,24 @@ export async function deleteCard(req: AuthenticatedRequest, res: Response) {
     if (doc.data()?.ownerId !== user.id) return res.status(403).json({ error: 'Forbidden' });
     await ref.delete();
     return res.status(204).send();
+  } catch (e) {
+    return res.status(500).json({ error: (e as Error).message });
+  }
+}
+
+export async function recognizeCard(req: AuthenticatedRequest, res: Response) {
+  const user = req.user;
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  const file = (req as any).file as Express.Multer.File | undefined;
+  if (!file?.buffer) {
+    return res.status(400).json({ error: 'Image file is required' });
+  }
+
+  try {
+    const ocrText = await extractTextFromBuffer(file.buffer);
+    const cardName = extractCardName(ocrText);
+    return res.status(200).json({ text: ocrText, cardName });
   } catch (e) {
     return res.status(500).json({ error: (e as Error).message });
   }

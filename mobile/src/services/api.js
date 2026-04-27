@@ -21,6 +21,7 @@ export const setAuthToken = (token) => {
 
 const getErrorMessage = (error) => {
   if (error.response?.data?.message) return error.response.data.message;
+  if (error.response?.data?.error) return error.response.data.error;
   if (error.message) return error.message;
   return 'Unexpected error';
 };
@@ -54,7 +55,7 @@ export const fetchProfile = async () => {
 
 export const addCard = async (cardPayload) => {
   try {
-    const { data } = await client.post('/cards', cardPayload);
+    const { data } = await client.post('/api/cards', cardPayload);
     return data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -63,7 +64,7 @@ export const addCard = async (cardPayload) => {
 
 export const getCards = async () => {
   try {
-    const { data } = await client.get('/cards');
+    const { data } = await client.get('/api/cards');
     return data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -72,23 +73,24 @@ export const getCards = async () => {
 
 export const deleteCard = async (cardId) => {
   try {
-    await client.delete(`/cards/${cardId}`);
+    await client.delete(`/api/cards/${cardId}`);
     return true;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 };
 
-export const uploadCardImage = async ({ uri, mimeType = 'image/jpeg', fileName = 'upload.jpg' }) => {
+/**
+ * Sends a card image to the backend OCR endpoint.
+ * Returns { text: string, cardName: string }
+ */
+export const recognizeCardImage = async ({ uri, mimeType = 'image/jpeg', fileName = 'card.jpg' }) => {
   try {
     const formData = new FormData();
-    formData.append('file', {
-      uri,
-      type: mimeType,
-      name: fileName
-    });
-    const { data } = await client.post('/cards/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+    formData.append('image', { uri, type: mimeType, name: fileName });
+    const { data } = await client.post('/api/cards/recognize', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 20000
     });
     return data;
   } catch (error) {
@@ -97,4 +99,3 @@ export const uploadCardImage = async ({ uri, mimeType = 'image/jpeg', fileName =
 };
 
 export default client;
-

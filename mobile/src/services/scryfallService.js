@@ -1,8 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-import { uploadCardImage } from './api';
-import { simulateOcrText } from './ocrService';
+import { recognizeCardImage } from './api';
 
 const baseUrl =
   process.env.EXPO_PUBLIC_SCRYFALL_URL ||
@@ -22,6 +21,7 @@ const normalizeCardPayload = (card) => ({
   colors: card.colors,
   rarity: card.rarity,
   setName: card.set_name,
+  edition: card.set,
   collectorNumber: card.collector_number,
   imageUrl: card.image_uris?.normal || card.image_uris?.large || card.image_uris?.small,
   scryfallId: card.id
@@ -29,8 +29,8 @@ const normalizeCardPayload = (card) => ({
 
 export const fetchCardByName = async (name, fuzzy = true) => {
   if (!name) return null;
-  const endpoint = `/cards/named?${fuzzy ? 'fuzzy' : 'exact'}=${encodeURIComponent(name)}`;
-  const { data } = await scryfallClient.get(endpoint);
+  const param = fuzzy ? 'fuzzy' : 'exact';
+  const { data } = await scryfallClient.get(`/cards/named?${param}=${encodeURIComponent(name)}`);
   return normalizeCardPayload(data);
 };
 
@@ -40,22 +40,36 @@ export const fetchCardBySetAndCollector = async (set, number) => {
   return normalizeCardPayload(data);
 };
 
-export const processCardRecognition = async ({ imageUri, cardName }) => {
-  if (cardName) {
-    return fetchCardByName(cardName, true);
+/**
+ * Autocomplete card names via Scryfall for live search suggestions.
+ * Returns an array of up to 20 name strings.
+ */
+export const autocompleteCardName = async (query) => {
+  if (!query || query.length < 2) return [];
+  try {
+    const { data } = await scryfallClient.get(`/cards/autocomplete?q=${encodeURIComponent(query)}`);
+    return data.data ?? [];
+  } catch {
+    return [];
   }
+};
+
+/**
+ * Given an image URI, sends it to the backend OCR endpoint to extract a card name,
+ * then queries Scryfall with the result.
+ * Returns { cardName, scryfallCard } where scryfallCard may be null on failure.
+ */
+export const processCardRecognition = async ({ imageUri }) => {
   if (!imageUri) return null;
-  const uploaded = await uploadCardImage({ uri: imageUri });
-  const ocrText = uploaded.text || (await simulateOcrText(imageUri));
-  const lines = ocrText.split('\n').map((line) => line.trim());
-  const probableName = lines.find((line) => line.length > 2);
-  if (!probableName) return null;
-  return fetchCardByName(probableName, true);
+  const { cardName } = await recognizeCardImage({ uri: imageUri });
+  if (!cardName) throw new Error('Could not extract card name from image');
+  const scryfallCard = await fetchCardByName(cardName, true);
+  return scryfallCard;
 };
 
 export default {
   fetchCardByName,
   fetchCardBySetAndCollector,
+  autocompleteCardName,
   processCardRecognition
 };
-
