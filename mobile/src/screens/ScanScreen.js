@@ -17,6 +17,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import { useCollection } from '../context/CollectionContext';
 import { autocompleteCardName } from '../services/scryfallService';
 import useImagePicker from '../hooks/useImagePicker';
+import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 import { colors, gradients, radius } from '../theme';
 
 const ScanScreen = ({ navigation }) => {
@@ -28,6 +29,9 @@ const ScanScreen = ({ navigation }) => {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { scrollRef, contentPadding, scrollToEnd } = useKeyboardScrollPadding({
+    baseBottomPadding: 32,
+  });
   const autocompleteTimer = useRef(null);
 
   useEffect(() => {
@@ -114,8 +118,10 @@ const ScanScreen = ({ navigation }) => {
     <LinearGradient colors={gradients.background} style={styles.flex}>
       <SafeAreaView style={styles.flex} edges={['top']}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          ref={scrollRef}
+          contentContainerStyle={[styles.scroll, contentPadding]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
@@ -222,6 +228,7 @@ const ScanScreen = ({ navigation }) => {
                 placeholderTextColor={colors.textSubtle}
                 value={cardName}
                 onChangeText={setCardName}
+                onFocus={scrollToEnd}
                 onSubmitEditing={handleFindByName}
                 returnKeyType="search"
                 editable={!isLoading}
@@ -334,7 +341,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
     paddingTop: 8,
   },
   header: {

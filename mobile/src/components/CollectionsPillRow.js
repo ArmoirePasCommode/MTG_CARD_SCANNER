@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -162,33 +164,38 @@ const CollectionsPillRow = () => {
         animationType="fade"
         onRequestClose={() => setRenameModalTag(null)}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setRenameModalTag(null)}>
-          <Pressable style={styles.modalBox} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Rename collection</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={renameText}
-              onChangeText={setRenameText}
-              autoFocus
-              autoCapitalize="none"
-              autoCorrect={false}
-              onSubmitEditing={handleRename}
-              returnKeyType="done"
-              placeholderTextColor={colors.textSubtle}
-            />
-            <View style={styles.modalActions}>
-              <Pressable
-                onPress={() => setRenameModalTag(null)}
-                style={[styles.modalBtn, styles.modalBtnCancel]}
-              >
-                <Text style={styles.modalBtnCancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable onPress={handleRename} style={[styles.modalBtn, styles.modalBtnConfirm]}>
-                <Text style={styles.modalBtnConfirmText}>Rename</Text>
-              </Pressable>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalKav}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setRenameModalTag(null)}>
+            <Pressable style={styles.modalBox} onPress={() => {}}>
+              <Text style={styles.modalTitle}>Rename collection</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={renameText}
+                onChangeText={setRenameText}
+                autoFocus
+                autoCapitalize="none"
+                autoCorrect={false}
+                onSubmitEditing={handleRename}
+                returnKeyType="done"
+                placeholderTextColor={colors.textSubtle}
+              />
+              <View style={styles.modalActions}>
+                <Pressable
+                  onPress={() => setRenameModalTag(null)}
+                  style={[styles.modalBtn, styles.modalBtnCancel]}
+                >
+                  <Text style={styles.modalBtnCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={handleRename} style={[styles.modalBtn, styles.modalBtnConfirm]}>
+                  <Text style={styles.modalBtnConfirmText}>Rename</Text>
+                </Pressable>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -265,6 +272,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: colors.textMuted,
+  },
+  modalKav: {
+    flex: 1,
   },
   modalBackdrop: {
     flex: 1,

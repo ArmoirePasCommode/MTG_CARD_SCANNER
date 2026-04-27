@@ -24,6 +24,7 @@ import {
   fetchCardByName,
   fetchCardBySetAndCollector,
 } from '../services/scryfallService';
+import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 import { colors, gradients, radius } from '../theme';
 
 // ---------------------------------------------------------------------------
@@ -380,6 +381,9 @@ const SearchTab = ({
   globalError,
   setGlobalError,
 }) => {
+  const { scrollRef, contentPadding, scrollToEnd } = useKeyboardScrollPadding({
+    baseBottomPadding: 24,
+  });
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [lookingUp, setLookingUp] = useState(false);
@@ -455,7 +459,14 @@ const SearchTab = ({
   };
 
   return (
-    <View style={styles.flex}>
+    <ScrollView
+      ref={scrollRef}
+      style={styles.flex}
+      contentContainerStyle={[styles.searchTabScroll, contentPadding]}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
           <Ionicons name="search" size={17} color={colors.textMuted} style={styles.searchIcon} />
@@ -465,6 +476,7 @@ const SearchTab = ({
             placeholderTextColor={colors.textSubtle}
             value={query}
             onChangeText={setQuery}
+            onFocus={scrollToEnd}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
             autoCorrect={false}
@@ -528,7 +540,7 @@ const SearchTab = ({
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -548,6 +560,9 @@ const PasteTab = ({
   globalError,
   setGlobalError,
 }) => {
+  const { scrollRef, contentPadding, scrollToEnd } = useKeyboardScrollPadding({
+    baseBottomPadding: 40,
+  });
   const [text, setText] = useState('');
   const [parsing, setParsing] = useState(false);
 
@@ -638,9 +653,11 @@ const PasteTab = ({
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.flex}
-      contentContainerStyle={styles.pasteScroll}
+      contentContainerStyle={[styles.pasteScroll, contentPadding]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
     >
       <Text style={styles.pasteHint}>
         Paste one card per line. Supported formats:
@@ -657,6 +674,7 @@ const PasteTab = ({
         multiline
         value={text}
         onChangeText={setText}
+        onFocus={scrollToEnd}
         placeholder="Paste your list here…"
         placeholderTextColor={colors.textSubtle}
         autoCorrect={false}
@@ -801,6 +819,9 @@ const styles = StyleSheet.create({
     color: colors.primaryAccent,
   },
   // Search tab
+  searchTabScroll: {
+    flexGrow: 1,
+  },
   searchSection: {
     paddingHorizontal: 16,
     zIndex: 20,
@@ -850,12 +871,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   searchEmptyState: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
     paddingHorizontal: 32,
+    paddingTop: 28,
     paddingBottom: 60,
+    minHeight: 220,
   },
   emptyTitle: {
     fontSize: 16,
@@ -872,7 +894,6 @@ const styles = StyleSheet.create({
   // Paste tab
   pasteScroll: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
     gap: 12,
   },
   pasteHint: {

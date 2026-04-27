@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -20,6 +20,7 @@ import CollectionToolbar from '../components/CollectionToolbar';
 import SetSectionHeader from '../components/SetSectionHeader';
 import { useCollection } from '../context/CollectionContext';
 import useAuth from '../hooks/useAuth';
+import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 import { colors, gradients, radius, shadow } from '../theme';
 import { cardLineValue, formatUsdCompact } from '../utils/format';
 import { getCachedSetInfo, primeSetInfo } from '../utils/setInfoCache';
@@ -177,6 +178,13 @@ const HomeScreen = ({ navigation }) => {
 
   const [fabMenuOpen, setFabMenuOpen] = useState(false);
 
+  const { scrollRef: listRef, contentPadding } = useKeyboardScrollPadding({
+    baseBottomPadding: 100,
+  });
+  const scrollListTop = useCallback(() => {
+    listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
+  }, [listRef]);
+
   const greeting = user?.displayName ? `Hello, ${user.displayName}` : 'Your Collection';
 
   const renderCard = ({ item }) => (
@@ -226,6 +234,7 @@ const HomeScreen = ({ navigation }) => {
           placeholderTextColor={colors.textSubtle}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          onFocus={scrollListTop}
           autoCorrect={false}
         />
         {searchQuery.length > 0 ? (
@@ -288,6 +297,7 @@ const HomeScreen = ({ navigation }) => {
       <SafeAreaView style={styles.flex} edges={['top']}>
         {viewMode === 'set' ? (
           <SectionList
+            ref={listRef}
             sections={setSections}
             keyExtractor={(item, index) =>
               item.id || item.scryfallId || `card-${index}`
@@ -297,22 +307,25 @@ const HomeScreen = ({ navigation }) => {
               <SetSectionHeader section={section} />
             )}
             stickySectionHeadersEnabled={false}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, contentPadding]}
             ListHeaderComponent={ListHeader}
             ListEmptyComponent={EmptyState}
             refreshControl={refreshControl}
+            keyboardDismissMode="on-drag"
           />
         ) : (
           <FlatList
+            ref={listRef}
             data={visible}
             keyExtractor={(item, index) =>
               item.id || item.scryfallId || `card-${index}`
             }
             renderItem={renderCard}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, contentPadding]}
             ListHeaderComponent={ListHeader}
             ListEmptyComponent={EmptyState}
             refreshControl={refreshControl}
+            keyboardDismissMode="on-drag"
           />
         )}
 
@@ -416,7 +429,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',

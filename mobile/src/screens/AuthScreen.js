@@ -18,6 +18,7 @@ import { z } from 'zod';
 
 import ControlledInput from '../components/ControlledInput';
 import useAuth from '../hooks/useAuth';
+import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email'),
@@ -36,6 +37,9 @@ const AuthScreen = () => {
   const [mode, setMode] = useState('login');
   const [serverError, setServerError] = useState(null);
   const fade = useRef(new Animated.Value(1)).current;
+  const { scrollRef, contentPadding, scrollToEnd } = useKeyboardScrollPadding({
+    baseBottomPadding: 32,
+  });
 
   const isLogin = mode === 'login';
   const schema = isLogin ? loginSchema : registerSchema;
@@ -91,8 +95,10 @@ const AuthScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          ref={scrollRef}
+          contentContainerStyle={[styles.scroll, contentPadding]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.brand}>
@@ -125,6 +131,7 @@ const AuthScreen = () => {
                 autoCapitalize="words"
                 autoComplete="name"
                 textContentType="name"
+                onInputFocus={scrollToEnd}
               />
             ) : null}
 
@@ -137,6 +144,7 @@ const AuthScreen = () => {
               keyboardType="email-address"
               autoComplete="email"
               textContentType="emailAddress"
+              onInputFocus={scrollToEnd}
             />
 
             <ControlledInput
@@ -150,6 +158,7 @@ const AuthScreen = () => {
               onSubmitEditing={handleSubmit(onSubmit)}
               autoComplete={isLogin ? 'current-password' : 'new-password'}
               textContentType={isLogin ? 'password' : 'newPassword'}
+              onInputFocus={scrollToEnd}
             />
 
             {serverError ? (
@@ -219,7 +228,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 64,
-    paddingBottom: 32,
     justifyContent: 'center',
   },
   brand: {

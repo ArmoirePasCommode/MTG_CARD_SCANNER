@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCollection } from '../context/CollectionContext';
+import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 import { colors, radius } from '../theme';
 
 /**
@@ -33,6 +36,7 @@ const tagColor = (name) => {
  */
 const TagPicker = ({ tags = [], onChange, disabled = false, compact = false }) => {
   const { tagsList } = useCollection();
+  const { contentPadding } = useKeyboardScrollPadding({ baseBottomPadding: 32 });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [newTagText, setNewTagText] = useState('');
 
@@ -104,7 +108,11 @@ const TagPicker = ({ tags = [], onChange, disabled = false, compact = false }) =
         onRequestClose={() => setSheetOpen(false)}
       >
         <Pressable style={styles.backdrop} onPress={() => setSheetOpen(false)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.kav}
+          >
+            <Pressable style={[styles.sheet, contentPadding]} onPress={() => {}}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Add to collections</Text>
 
@@ -130,7 +138,11 @@ const TagPicker = ({ tags = [], onChange, disabled = false, compact = false }) =
               </View>
             </View>
 
-            <ScrollView style={styles.listScroll} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.listScroll}
+              showsVerticalScrollIndicator={false}
+              keyboardDismissMode="on-drag"
+            >
               {suggestions.length > 0 ? (
                 <>
                   <Text style={styles.listHeader}>
@@ -207,6 +219,7 @@ const TagPicker = ({ tags = [], onChange, disabled = false, compact = false }) =
               <Text style={styles.doneBtnText}>Done</Text>
             </Pressable>
           </Pressable>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </View>
@@ -267,12 +280,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
+  kav: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'flex-end',
+  },
   sheet: {
     backgroundColor: colors.backgroundElevated,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 12,
-    paddingBottom: 32,
     maxHeight: '75%',
   },
   sheetHandle: {

@@ -18,6 +18,7 @@ const ControlledInput = forwardRef(
       onSubmitEditing,
       autoComplete,
       textContentType,
+      onInputFocus,
     },
     ref
   ) => {
@@ -59,7 +60,10 @@ const ControlledInput = forwardRef(
                     setIsFocused(false);
                     onBlur();
                   }}
-                  onFocus={() => setIsFocused(true)}
+                  onFocus={() => {
+                    setIsFocused(true);
+                    onInputFocus?.();
+                  }}
                   secureTextEntry={secureTextEntry && !showPassword}
                   autoCapitalize={autoCapitalize}
                   keyboardType={keyboardType}
