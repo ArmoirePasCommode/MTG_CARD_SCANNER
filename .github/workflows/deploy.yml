@@ -56,6 +56,7 @@ jobs:
           # Deploy directly to the target project and increase verbosity for better error messages
           gcloud app deploy app.yaml \
             --project="${GCP_PROJECT_ID}" \
+            --service-account="${{ secrets.GCP_DEPLOY_SA }}" \
             --quiet \
             --verbosity=debug
 
