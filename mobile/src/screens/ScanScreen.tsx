@@ -245,7 +245,7 @@ const ScanScreen = ({ navigation }: ScanScreenProps): React.JSX.Element => {
                 placeholderTextColor={colors.textSubtle}
                 value={cardName}
                 onChangeText={setCardName}
-                onFocus={scrollToEnd}
+                onFocus={() => scrollToEnd()}
                 onSubmitEditing={() => {
                   void handleFindByName();
                 }}

@@ -189,7 +189,7 @@ const SearchTab = ({
             placeholderTextColor={colors.textSubtle}
             value={query}
             onChangeText={setQuery}
-            onFocus={scrollToEnd}
+            onFocus={() => scrollToEnd()}
             onSubmitEditing={() => {
               if (query.trim()) void handlePick(query.trim());
             }}
@@ -406,7 +406,7 @@ const PasteTab = ({
         multiline
         value={text}
         onChangeText={setText}
-        onFocus={scrollToEnd}
+        onFocus={() => scrollToEnd()}
         placeholder="Paste your list here…"
         placeholderTextColor={colors.textSubtle}
         autoCorrect={false}

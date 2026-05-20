@@ -100,10 +100,12 @@ const request = async <T = unknown>(path: string, options: RequestOptions = {}):
   const { signal: timedSignal, cancel } = withTimeout(signal, timeoutMs);
 
   try {
+    const resolvedBody = body ? (isFormData ? (body as FormData) : JSON.stringify(body)) : null;
+
     const response = await fetch(url, {
       method,
       headers: finalHeaders,
-      body: body ? (isFormData ? (body as FormData) : JSON.stringify(body)) : undefined,
+      ...(resolvedBody !== null ? { body: resolvedBody } : {}),
       signal: timedSignal,
     });
 
