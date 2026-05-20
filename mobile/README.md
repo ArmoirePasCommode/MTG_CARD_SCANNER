@@ -1,5 +1,8 @@
 ## MTG Card Scanner – Mobile
 
+> **v1.0.0-ts** — Fully migrated to TypeScript. All screens, components, contexts, hooks, services and utilities are `.ts`/`.tsx` with strict type-checking. Prettier, ESLint, and Husky pre-commit hooks are configured.
+
+
 Expo-managed React Native frontend for the MTG Card Scanner project. Handles auth, card scanning/upload, Scryfall lookups, and personal collection management.
 
 ### Setup
@@ -12,6 +15,14 @@ Expo-managed React Native frontend for the MTG Card Scanner project. Handles aut
   BACKEND_HEALTH_PATH=/test
   ```
   These values are consumed both by Expo (via `EXPO_PUBLIC_*`) and the backend connectivity script.
+
+### Type-checking & Linting
+```
+npm run typecheck   # tsc --noEmit
+npm run lint        # ESLint
+npm run lint:fix    # ESLint with auto-fix
+npm run format      # Prettier write
+```
 
 ### Running the App
 ```

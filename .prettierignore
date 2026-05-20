@@ -1,0 +1,7 @@
+dist/
+node_modules/
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+*.json
+*.md
