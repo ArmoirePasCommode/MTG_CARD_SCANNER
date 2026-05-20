@@ -1,4 +1,5 @@
 import { fetch } from 'expo/fetch';
+import * as FileSystem from 'expo-file-system';
 import Constants from 'expo-constants';
 
 const BACKEND_URL =
@@ -129,13 +130,16 @@ export const deleteTag = (name) =>
 /**
  * Sends a card image to the backend OCR endpoint.
  * Returns { text: string, cardName: string }
+ *
+ * Reads the file as base64 and sends it as JSON to avoid FormData/fetch
+ * compatibility issues with expo/fetch (which does not support the RN-style
+ * { uri, type, name } FormData part).
  */
-export const recognizeCardImage = ({ uri, mimeType = 'image/jpeg', fileName = 'card.jpg' }) => {
-  const formData = new FormData();
-  formData.append('image', { uri, type: mimeType, name: fileName });
+export const recognizeCardImage = async ({ uri, mimeType = 'image/jpeg' }) => {
+  const imageBase64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
   return request('/api/cards/recognize', {
     method: 'POST',
-    body: formData,
+    body: { imageBase64, mimeType },
     timeoutMs: 30000,
   });
 };

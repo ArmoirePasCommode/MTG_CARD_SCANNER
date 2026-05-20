@@ -41,6 +41,9 @@ const QTY_RE = /^\s*(?:(\d+)\s*[x×]?\s+)?([^()\n]+?)(?:\s*\(([^)]+)\)\s*(\S+?))
 
 const SKIP_RE = /^(\/\/|sideboard|deck|main|commander|companion)\b/i;
 
+/** Unique lines per paste import; must stay ≤ server `MAX_BULK_CARDS` per save batch. */
+const MAX_DECKLIST_IMPORT_LINES = 250;
+
 const parseDecklistLine = (line) => {
   const trimmed = line.trim();
   if (!trimmed || SKIP_RE.test(trimmed)) return null;
@@ -573,8 +576,10 @@ const PasteTab = ({
       setGlobalError('No valid card lines found. Use format: "4 Lightning Bolt"');
       return;
     }
-    if (parsed.length > 50) {
-      setGlobalError(`Too many cards (${parsed.length}). Max 50 per import.`);
+    if (parsed.length > MAX_DECKLIST_IMPORT_LINES) {
+      setGlobalError(
+        `Too many cards (${parsed.length}). Max ${MAX_DECKLIST_IMPORT_LINES} lines per import.`
+      );
       return;
     }
 

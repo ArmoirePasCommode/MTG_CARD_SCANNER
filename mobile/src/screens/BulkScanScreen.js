@@ -13,8 +13,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 
 import PrimaryButton from '../components/PrimaryButton';
+import LiveCameraView from '../components/LiveCameraView';
 import {
   STATUS,
   newId,
@@ -22,13 +24,11 @@ import {
   ReviewStage,
 } from '../components/BulkReview';
 import { useCollection } from '../context/CollectionContext';
-import useImagePicker from '../hooks/useImagePicker';
-import { processCardRecognition } from '../services/scryfallService';
-import { colors, gradients, radius, shadow } from '../theme';
+import { colors, gradients, radius } from '../theme';
 
 const BulkScanScreen = ({ navigation }) => {
-  const { takePhoto } = useImagePicker();
   const { cards, bulkAddToCollection, updateCardInCollection } = useCollection();
+  const isFocused = useIsFocused();
 
   const [entries, setEntries] = useState([]);
   const [stage, setStage] = useState('capture'); // capture | review
@@ -49,75 +49,50 @@ const BulkScanScreen = ({ navigation }) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
   }, []);
 
-  const recognize = useCallback(async (id, uri) => {
-    try {
-      const card = await processCardRecognition({ imageUri: uri });
-      if (!card) throw new Error('No match found');
-      setEntries((prev) => {
-        // Merge duplicates within the batch by scryfallId
-        const existing = card.scryfallId
-          ? prev.find(
-              (e) =>
-                e.id !== id &&
-                e.status === STATUS.RECOGNIZED &&
-                e.card?.scryfallId === card.scryfallId &&
-                e.isFoil === false
-            )
-          : null;
-        if (existing) {
-          // bump existing entry quantity, drop the new one
-          return prev
-            .map((e) =>
-              e.id === existing.id
-                ? { ...e, quantity: (e.quantity || 1) + 1, mergedFromBatch: true }
-                : e
-            )
-            .filter((e) => e.id !== id);
-        }
+  /**
+   * Called by LiveCameraView whenever a card is successfully recognized.
+   * Merges duplicates within the current batch (same scryfallId + non-foil).
+   */
+  const handleCardRecognized = useCallback((card) => {
+    setGlobalError(null);
+    setEntries((prev) => {
+      const existing = card.scryfallId
+        ? prev.find(
+            (e) =>
+              e.status === STATUS.RECOGNIZED &&
+              e.card?.scryfallId === card.scryfallId &&
+              e.isFoil === false
+          )
+        : null;
+
+      if (existing) {
         return prev.map((e) =>
-          e.id === id
-            ? { ...e, status: STATUS.RECOGNIZED, card, error: null }
+          e.id === existing.id
+            ? { ...e, quantity: (e.quantity || 1) + 1, mergedFromBatch: true }
             : e
         );
-      });
-    } catch (err) {
-      updateEntry(id, {
-        status: STATUS.FAILED,
-        error: err?.message || 'Could not identify card',
-      });
-    }
-  }, [updateEntry]);
+      }
 
-  const handleCapture = useCallback(async () => {
-    setGlobalError(null);
-    try {
-      const uri = await takePhoto();
-      if (!uri) return;
-      const id = newId();
-      setEntries((prev) => [
+      return [
         ...prev,
         {
-          id,
-          uri,
-          status: STATUS.PENDING,
-          card: null,
+          id: newId(),
+          uri: null,
+          status: STATUS.RECOGNIZED,
+          card,
           quantity: 1,
           isFoil: false,
           error: null,
         },
-      ]);
-      recognize(id, uri);
-    } catch (err) {
-      setGlobalError(err?.message || 'Failed to capture image');
-    }
-  }, [recognize, takePhoto]);
+      ];
+    });
+  }, []);
 
   const handleRetry = useCallback(
     (entry) => {
-      updateEntry(entry.id, { status: STATUS.PENDING, error: null });
-      recognize(entry.id, entry.uri);
+      updateEntry(entry.id, { status: STATUS.FAILED, error: 'Manual retry not available in live scan mode.' });
     },
-    [recognize, updateEntry]
+    [updateEntry]
   );
 
   const recognizedCount = useMemo(
@@ -278,7 +253,8 @@ const BulkScanScreen = ({ navigation }) => {
         {stage === 'capture' ? (
           <CaptureStage
             entries={entries}
-            onCapture={handleCapture}
+            onCardRecognized={handleCardRecognized}
+            isActive={isFocused}
             onOpenReview={() => entries.length && setStage('review')}
             onRetry={handleRetry}
             onRemove={removeEntry}
@@ -311,7 +287,8 @@ const BulkScanScreen = ({ navigation }) => {
 
 const CaptureStage = ({
   entries,
-  onCapture,
+  onCardRecognized,
+  isActive,
   onOpenReview,
   onRetry,
   onRemove,
@@ -323,28 +300,15 @@ const CaptureStage = ({
   <View style={styles.flex}>
     <ScrollView contentContainerStyle={styles.captureScroll}>
       <Text style={styles.captureSubtitle}>
-        Snap as many cards as you want. We&apos;ll identify them in the background.
+        Point the camera at each card — it scans automatically.
       </Text>
 
-      <View style={styles.captureHeroWrap}>
-        <Pressable
-          onPress={onCapture}
-          style={({ pressed }) => [
-            styles.captureBtn,
-            pressed && styles.captureBtnPressed,
-          ]}
-        >
-          <LinearGradient
-            colors={gradients.primary}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.captureBtnGradient}
-          >
-            <Ionicons name="camera" size={42} color="#fff" />
-            <Text style={styles.captureBtnText}>Capture card</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
+      <LiveCameraView
+        style={styles.liveCameraBulk}
+        mode="bulk"
+        isActive={isActive}
+        onCardRecognized={onCardRecognized}
+      />
 
       {entries.length > 0 ? (
         <View style={styles.summaryRow}>
@@ -400,7 +364,7 @@ const CaptureStage = ({
         <View style={styles.emptyHint}>
           <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
           <Text style={styles.emptyHintText}>
-            Captured cards will appear here while OCR runs in the background.
+            Recognized cards will appear here as you scan them.
           </Text>
         </View>
       )}
@@ -429,7 +393,10 @@ const SummaryPill = ({ label, value, color, icon }) => (
 
 const ThumbnailItem = ({ entry, onPress, onRemove }) => (
   <Pressable onPress={onPress} style={thumbStyles.wrap}>
-    <Image source={{ uri: entry.uri }} style={thumbStyles.img} />
+    <Image
+      source={{ uri: entry.uri ?? entry.card?.imageUrl ?? undefined }}
+      style={thumbStyles.img}
+    />
     <View style={thumbStyles.statusOverlay}>
       {entry.status === STATUS.PENDING ? (
         <View style={thumbStyles.dotPending}>
@@ -601,31 +568,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 18,
   },
-  captureHeroWrap: {
-    alignItems: 'center',
-    marginVertical: 12,
-  },
-  captureBtn: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    overflow: 'hidden',
-    ...shadow.fab,
-  },
-  captureBtnPressed: {
-    transform: [{ scale: 0.97 }],
-  },
-  captureBtnGradient: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  captureBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+  liveCameraBulk: {
+    height: 320,
+    marginBottom: 14,
   },
   summaryRow: {
     flexDirection: 'row',

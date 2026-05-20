@@ -10,29 +10,92 @@ const baseUrl =
 
 const SCRYFALL_TIMEOUT_MS = 8000;
 
-const scryfallRequest = async (path) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), SCRYFALL_TIMEOUT_MS);
-  try {
-    const response = await fetch(`${baseUrl}${path}`, {
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      const message = `Scryfall request failed (${response.status})`;
-      const err = new Error(message);
-      err.status = response.status;
-      throw err;
-    }
-    return await response.json();
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      throw new Error('Scryfall request timed out.');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timer);
+/** Required by Scryfall — identify the app (see https://scryfall.com/docs/api) */
+const USER_AGENT = `MTGCardScanner/${
+  Constants.expoConfig?.version ?? '1.0.0'
+} (Android; Expo)`;
+
+const JSON_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent': USER_AGENT,
+};
+
+/**
+ * Global pacing: `/cards/named`, `/cards/autocomplete`, `/cards/{set}/{nr}`, etc. share tight limits.
+ * Anything that bypassed pacing (e.g. autocomplete while paste resolves) still triggered 429.
+ */
+const MIN_REQUEST_INTERVAL_MS = 550;
+
+/** After 429, Scryfall often asks for a multi-second pause — honor header or default. */
+const DEFAULT_RETRY_AFTER_MS = 30_000;
+const MAX_429_RETRIES = 5;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function parseRetryAfterMs(response) {
+  const raw = response.headers?.get?.('Retry-After');
+  if (!raw) return DEFAULT_RETRY_AFTER_MS;
+  const sec = parseInt(String(raw).trim(), 10);
+  if (Number.isFinite(sec)) {
+    return Math.min(Math.max(sec * 1000, 500), 120_000);
   }
+  return DEFAULT_RETRY_AFTER_MS;
+}
+
+let requestMutex = Promise.resolve();
+let lastRequestStartMs = 0;
+
+const scryfallRequest = async (path) => {
+  const ticket = requestMutex.then(async () => {
+    const now = Date.now();
+    const elapsed = now - lastRequestStartMs;
+    if (lastRequestStartMs > 0 && elapsed < MIN_REQUEST_INTERVAL_MS) {
+      await sleep(MIN_REQUEST_INTERVAL_MS - elapsed);
+    }
+
+    let attempt = 0;
+    while (attempt <= MAX_429_RETRIES) {
+      lastRequestStartMs = Date.now();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), SCRYFALL_TIMEOUT_MS);
+      try {
+        const response = await fetch(`${baseUrl}${path}`, {
+          headers: JSON_HEADERS,
+          signal: controller.signal,
+        });
+
+        if (response.ok) {
+          return await response.json();
+        }
+
+        if (response.status === 429 && attempt < MAX_429_RETRIES) {
+          const waitMs = parseRetryAfterMs(response);
+          await sleep(waitMs);
+          attempt += 1;
+          continue;
+        }
+
+        let message = `Scryfall request failed (${response.status})`;
+        if (response.status === 429) {
+          message =
+            'Scryfall rate limit exceeded after retries. Wait ~1 minute and retry failed rows.';
+        }
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          throw new Error('Scryfall request timed out.');
+        }
+        throw error;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+  });
+
+  requestMutex = ticket.catch(() => {});
+  return ticket;
 };
 
 const parseMoney = (v) => {
@@ -54,7 +117,9 @@ const normalizeCardPayload = (card) => ({
   imageUrl:
     card.image_uris?.normal ||
     card.image_uris?.large ||
-    card.image_uris?.small,
+    card.image_uris?.small ||
+    card.card_faces?.[0]?.image_uris?.normal ||
+    card.card_faces?.[0]?.image_uris?.large,
   scryfallId: card.id,
   priceUsd: parseMoney(card.prices?.usd),
   priceEur: parseMoney(card.prices?.eur),
@@ -73,7 +138,9 @@ export const fetchCardByName = async (name, fuzzy = true) => {
 
 export const fetchCardBySetAndCollector = async (set, number) => {
   if (!set || !number) return null;
-  const data = await scryfallRequest(`/cards/${set}/${number}`);
+  const data = await scryfallRequest(
+    `/cards/${encodeURIComponent(set)}/${encodeURIComponent(number)}`
+  );
   return normalizeCardPayload(data);
 };
 

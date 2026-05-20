@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,8 +11,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 
 import PrimaryButton from '../components/PrimaryButton';
+import LiveCameraView from '../components/LiveCameraView';
 import { useCollection } from '../context/CollectionContext';
 import { autocompleteCardName } from '../services/scryfallService';
 import useImagePicker from '../hooks/useImagePicker';
@@ -21,8 +22,9 @@ import { useKeyboardScrollPadding } from '../hooks/useKeyboardScrollPadding';
 import { colors, gradients, radius } from '../theme';
 
 const ScanScreen = ({ navigation }) => {
-  const { imageUri, pickFromLibrary, takePhoto, reset } = useImagePicker();
+  const { pickFromLibrary, reset } = useImagePicker();
   const { recognizeCard } = useCollection();
+  const isFocused = useIsFocused();
 
   const [cardName, setCardName] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -55,28 +57,17 @@ const ScanScreen = ({ navigation }) => {
     };
   }, [cardName]);
 
-  const runOcrOnImage = async (uri) => {
-    setOcrLoading(true);
+  const handleCardRecognized = async (card) => {
+    if (ocrLoading) return;
     setError(null);
+    setOcrLoading(true);
     try {
-      const card = await recognizeCard({ imageUri: uri });
       navigation.navigate('CardDetails', { card, fromScan: true });
-      reset();
       setCardName('');
     } catch {
-      setError('Could not auto-identify card. Please type the name below.');
+      setError('Could not load card details. Please try again.');
     } finally {
       setOcrLoading(false);
-    }
-  };
-
-  const handleTakePhoto = async () => {
-    setError(null);
-    try {
-      const uri = await takePhoto();
-      if (uri) await runOcrOnImage(uri);
-    } catch (err) {
-      setError(err?.message || 'Failed to access camera.');
     }
   };
 
@@ -84,9 +75,16 @@ const ScanScreen = ({ navigation }) => {
     setError(null);
     try {
       const uri = await pickFromLibrary();
-      if (uri) await runOcrOnImage(uri);
+      if (!uri) return;
+      setOcrLoading(true);
+      const card = await recognizeCard({ imageUri: uri });
+      reset();
+      navigation.navigate('CardDetails', { card, fromScan: true });
+      setCardName('');
     } catch (err) {
-      setError(err?.message || 'Failed to open library.');
+      setError(err?.message || 'Could not identify card from library image.');
+    } finally {
+      setOcrLoading(false);
     }
   };
 
@@ -131,36 +129,24 @@ const ScanScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          <View style={styles.preview}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
-            ) : (
-              <View style={styles.placeholderInner}>
-                <View style={styles.placeholderIconWrap}>
-                  <Ionicons name="scan-outline" size={32} color={colors.primaryAccent} />
-                </View>
-                <Text style={styles.placeholder}>No image yet</Text>
-                <Text style={styles.placeholderHint}>Camera or library</Text>
-              </View>
-            )}
-            {ocrLoading ? (
-              <View style={styles.ocrOverlay}>
-                <ActivityIndicator size="large" color="#fff" />
-                <Text style={styles.ocrOverlayText}>Recognizing card…</Text>
-              </View>
-            ) : null}
-          </View>
+          <LiveCameraView
+            style={styles.liveCamera}
+            mode="single"
+            isActive={isFocused && !ocrLoading}
+            onCardRecognized={handleCardRecognized}
+          />
+
+          {ocrLoading ? (
+            <View style={styles.ocrOverlayBanner}>
+              <ActivityIndicator size="small" color={colors.primaryAccent} />
+              <Text style={styles.ocrOverlayText}>Loading card…</Text>
+            </View>
+          ) : null}
 
           <View style={styles.actionRow}>
             <ActionButton
-              icon="camera"
-              label="Camera"
-              onPress={handleTakePhoto}
-              disabled={isLoading}
-            />
-            <ActionButton
               icon="image"
-              label="Library"
+              label="From Library"
               onPress={handlePickFromLibrary}
               disabled={isLoading}
             />
@@ -357,56 +343,26 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     lineHeight: 20,
   },
-  preview: {
-    height: 240,
-    borderRadius: radius.xl,
+  liveCamera: {
+    height: 340,
+    marginBottom: 10,
+  },
+  ocrOverlayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: colors.backgroundCardSolid,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 14,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    backgroundColor: colors.primarySoft,
-    borderWidth: 1,
-    borderColor: 'rgba(167,139,250,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  placeholder: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  placeholderHint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  ocrOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15,10,31,0.85)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
   },
   ocrOverlayText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '500',
   },
   actionRow: {
     flexDirection: 'row',

@@ -5,7 +5,7 @@ import { uploadImageBuffer } from '../services/storageService.js';
 import { extractCardName, extractTextFromBuffer } from '../services/visionService.js';
 import { CardUpdate, NewCard } from '../models/Card.js';
 
-const MAX_BULK_CARDS = 50;
+const MAX_BULK_CARDS = 250;
 
 function nowIso(): string { return new Date().toISOString(); }
 
@@ -202,13 +202,21 @@ export async function recognizeCard(req: AuthenticatedRequest, res: Response) {
   const user = req.user;
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
+  let imageBuffer: Buffer | null = null;
+
   const file = (req as any).file as Express.Multer.File | undefined;
-  if (!file?.buffer) {
-    return res.status(400).json({ error: 'Image file is required' });
+  if (file?.buffer) {
+    imageBuffer = file.buffer;
+  } else if (typeof req.body?.imageBase64 === 'string' && req.body.imageBase64.length > 0) {
+    imageBuffer = Buffer.from(req.body.imageBase64, 'base64');
+  }
+
+  if (!imageBuffer) {
+    return res.status(400).json({ error: 'Image file or imageBase64 is required' });
   }
 
   try {
-    const ocrText = await extractTextFromBuffer(file.buffer);
+    const ocrText = await extractTextFromBuffer(imageBuffer);
     const cardName = extractCardName(ocrText);
     return res.status(200).json({ text: ocrText, cardName });
   } catch (e) {
