@@ -128,7 +128,7 @@ const LiveCameraView = ({ onCardRecognized, mode = 'single', isActive = true, st
         }).start();
 
         const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.6,
+          quality: 0.25,
           skipProcessing: true,
           exif: false,
         });

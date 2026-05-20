@@ -1,5 +1,5 @@
 import { fetch } from 'expo/fetch';
-import * as FileSystem from 'expo-file-system';
+import { File as ExpoFile } from 'expo-file-system/next';
 import Constants from 'expo-constants';
 
 const BACKEND_URL =
@@ -136,7 +136,7 @@ export const deleteTag = (name) =>
  * { uri, type, name } FormData part).
  */
 export const recognizeCardImage = async ({ uri, mimeType = 'image/jpeg' }) => {
-  const imageBase64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+  const imageBase64 = await new ExpoFile(uri).base64();
   return request('/api/cards/recognize', {
     method: 'POST',
     body: { imageBase64, mimeType },

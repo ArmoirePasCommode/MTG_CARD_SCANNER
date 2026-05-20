@@ -9,7 +9,7 @@ export const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.options('*', cors());
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/test', (_req, res) => res.status(200).json({ ok: true }));
 
