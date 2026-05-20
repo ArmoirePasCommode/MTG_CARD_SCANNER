@@ -2,8 +2,6 @@
  * Formatting helpers shared across the collection UI.
  */
 
-import type { Card } from '../types/api';
-
 const usdFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',

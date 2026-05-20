@@ -63,7 +63,7 @@ const limitedConcurrency = async (tasks: TaskFn[], limit = 4): Promise<void> => 
   await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, run));
 };
 
-const TABS: Array<{ key: TabKey; label: string; icon: IoniconName }> = [
+const TABS: { key: TabKey; label: string; icon: IoniconName }[] = [
   { key: 'search', label: 'Search', icon: 'search-outline' },
   { key: 'paste', label: 'Paste list', icon: 'clipboard-outline' },
 ];
@@ -397,7 +397,7 @@ const PasteTab = ({
         <Text style={styles.pasteFormatLine}>4 Lightning Bolt</Text>
         <Text style={styles.pasteFormatLine}>2x Sol Ring</Text>
         <Text style={styles.pasteFormatLine}>1 Black Lotus (LEA) 232</Text>
-        <Text style={styles.pasteFormatLine}>// comments are ignored</Text>
+        <Text style={styles.pasteFormatLine}>{'// comments are ignored'}</Text>
       </View>
       <TextInput
         style={styles.pasteInput}
@@ -521,7 +521,7 @@ const AddCardsScreen = ({ navigation }: AddCardsScreenProps): React.JSX.Element 
     setGlobalError(null);
     try {
       const newCardsPayload: NewCard[] = [];
-      const updates: Array<{ id: string; patch: CardUpdate }> = [];
+      const updates: { id: string; patch: CardUpdate }[] = [];
       recognized.forEach((entry) => {
         const existing = findExistingByScryfallId(cards, entry.card?.scryfallId);
         if (existing && entry.isFoil === (existing.isFoil === true)) {

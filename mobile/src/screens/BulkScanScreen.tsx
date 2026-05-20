@@ -25,7 +25,7 @@ import {
 } from '../components/BulkReview';
 import { useCollection } from '../context/CollectionContext';
 import { colors, gradients, radius } from '../theme';
-import type { NewCard } from '../types/api';
+import type { NewCard, CardUpdate } from '../types/api';
 import type { BulkScanScreenProps } from '../navigation/types';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -301,8 +301,8 @@ const BulkScanScreen = ({ navigation }: BulkScanScreenProps): React.JSX.Element 
     setSaving(true);
     setGlobalError(null);
     try {
-      const newCardsPayload: import('../types/api').NewCard[] = [];
-      const updates: Array<{ id: string; patch: import('../types/api').CardUpdate }> = [];
+      const newCardsPayload: NewCard[] = [];
+      const updates: { id: string; patch: CardUpdate }[] = [];
 
       recognized.forEach((entry) => {
         const existing = findExistingByScryfallId(cards, entry.card?.scryfallId);

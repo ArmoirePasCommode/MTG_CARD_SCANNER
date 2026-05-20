@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, type KeyboardEvent, ScrollView } from 'react-native';
+import { Keyboard, type KeyboardEvent, type ScrollView } from 'react-native';
 
 export interface KeyboardScrollPaddingOptions {
   baseBottomPadding?: number;

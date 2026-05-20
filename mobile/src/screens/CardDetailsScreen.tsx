@@ -49,7 +49,7 @@ const CardDetailsScreen = ({ route, navigation }: CardDetailsScreenProps): React
     const c = card as { id?: string; scryfallId?: string | null; name?: string };
     if (c.id) return `id:${c.id}`;
     return `lookup:${String(c.scryfallId ?? '')}::${String(c.name ?? '')}`;
-  }, [(card as { id?: string } | undefined)?.id, card?.scryfallId, card?.name]);
+  }, [card]);
 
   const [quantity, setQuantity] = useState(
     Math.max(1, (card as { quantity?: number } | undefined)?.quantity ?? 1)
@@ -92,7 +92,7 @@ const CardDetailsScreen = ({ route, navigation }: CardDetailsScreenProps): React
     setUpdateError(null);
     setUpdateSavedAt(null);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-  }, [cardRouteKey]);
+  }, [card, cardRouteKey]);
 
   const dirty = useMemo(() => {
     if (!isInCollection) return false;

@@ -58,7 +58,7 @@ interface ScryfallCard {
   collector_number: string;
   released_at?: string;
   image_uris?: ScryfallImageUris;
-  card_faces?: Array<{ image_uris?: ScryfallImageUris }>;
+  card_faces?: { image_uris?: ScryfallImageUris }[];
   prices?: {
     usd?: string | null;
     eur?: string | null;

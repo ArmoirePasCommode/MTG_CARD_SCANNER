@@ -332,12 +332,12 @@ const HomeScreen = ({ navigation }: HomeScreenProps): React.JSX.Element => {
     />
   );
 
-  const fabActions: Array<{
+  const fabActions: {
     icon: IoniconName;
     label: string;
     sub: string;
     screen: 'Scan' | 'BulkScan' | 'AddCards';
-  }> = [
+  }[] = [
     { icon: 'camera', label: 'Scan a card', sub: 'Single card OCR', screen: 'Scan' },
     { icon: 'layers', label: 'Bulk scan', sub: 'Capture many cards at once', screen: 'BulkScan' },
     { icon: 'search', label: 'Add by name', sub: 'Search or paste a decklist', screen: 'AddCards' },
