@@ -20,5 +20,3 @@ export const env = {
   GCS_BUCKET: requireEnv('GCS_BUCKET') as string,
   FIRESTORE_DATABASE_ID: requireEnv('FIRESTORE_DATABASE_ID', true),
 };
-
-

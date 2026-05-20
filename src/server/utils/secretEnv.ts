@@ -9,7 +9,10 @@ function parseDotenv(content: string): Record<string, string> {
     if (idx === -1) return;
     const key = trimmed.slice(0, idx).trim();
     let value = trimmed.slice(idx + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     envs[key] = value;
@@ -42,9 +45,6 @@ export async function loadEnvFromSecretIfConfigured(): Promise<void> {
       }
     }
   } catch (e) {
-
     console.warn('Warning: failed to load env from Secret Manager:', (e as Error).message);
   }
 }
-
-

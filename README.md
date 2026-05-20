@@ -1,14 +1,19 @@
 ## MTG Card Scanner Backend (TypeScript + Express + GCP)
 
+> **v1.0.0-ts** — Full TypeScript codebase. All source files are `.ts`/`.tsx`. Strict type-checking, Prettier formatting, Husky pre-commit hooks, and GitHub Actions CI are all in place.
+
+
 Backend API for a React Native app that scans Magic: The Gathering cards, stores them securely, and synchronizes the user's collection across devices. Built with TypeScript, Express, JWT auth, Firestore, and Google Cloud Storage. Deployed on Google App Engine with CI/CD via GitHub Actions.
 
 ### Features
+- **TypeScript strict mode**: `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride` across the entire backend
 - **JWT authentication**: signup, login, refresh token
 - **Firestore**: users and cards collections
 - **Cloud Storage**: secure image uploads using in-memory upload and server-side upload
 - **Endpoints**: add card (with image), list, delete, sync collection
 - **Tests**: Jest + Supertest
 - **Deployment**: App Engine Standard (Node 20), GitHub Actions workflow
+- **Code quality**: Prettier formatting, Husky pre-commit hooks, lint-staged, commitlint (conventional commits)
 
 ### API Overview
 - POST `/api/auth/signup`

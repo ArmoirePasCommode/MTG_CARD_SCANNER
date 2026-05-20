@@ -17,10 +17,18 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 export const cardRouter = Router();
 
 cardRouter.use(authMiddleware);
-cardRouter.post('/recognize', (upload.single('image') as unknown as import('express').RequestHandler), recognizeCard);
+cardRouter.post(
+  '/recognize',
+  upload.single('image') as unknown as import('express').RequestHandler,
+  recognizeCard
+);
 cardRouter.post('/bulk', bulkAddCards);
 cardRouter.post('/tag', tagCards);
-cardRouter.post('/', (upload.single('image') as unknown as import('express').RequestHandler), addCard);
+cardRouter.post(
+  '/',
+  upload.single('image') as unknown as import('express').RequestHandler,
+  addCard
+);
 cardRouter.get('/', listCards);
 cardRouter.get('/sync', syncCards);
 cardRouter.patch('/:id', updateCard);

@@ -15,7 +15,10 @@ export const firestore = isTest
         add: async (_doc: any) => ({ id: 'test-id' }),
       }),
     } as unknown as Firestore)
-  : new Firestore({ projectId: env.GCP_PROJECT_ID, databaseId: env.FIRESTORE_DATABASE_ID ?? '(default)' });
+  : new Firestore({
+      projectId: env.GCP_PROJECT_ID,
+      databaseId: env.FIRESTORE_DATABASE_ID ?? '(default)',
+    });
 
 export const storage = isTest
   ? ({} as unknown as Storage)
@@ -30,5 +33,3 @@ export const bucket = isTest
       }),
     } as any)
   : storage.bucket(env.GCS_BUCKET);
-
-

@@ -16,5 +16,3 @@ app.get('/test', (_req, res) => res.status(200).json({ ok: true }));
 app.use('/api/auth', authRouter);
 app.use('/api/cards', cardRouter);
 app.use('/api/tags', tagRouter);
-
-

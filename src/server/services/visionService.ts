@@ -31,7 +31,8 @@ export function extractCardName(ocrText: string): string {
   const COLLECTOR_NUMBER = /^\d+\/\d+$/;
   const POWER_TOUGHNESS = /^\d+\/\d+$/;
   const REMINDER_TEXT = /^\(.*\)$/;
-  const TYPE_LINE = /\bCreature\b|\bInstant\b|\bSorcery\b|\bEnchantment\b|\bArtifact\b|\bPlaneswalker\b|\bLand\b|\bBattle\b/i;
+  const TYPE_LINE =
+    /\bCreature\b|\bInstant\b|\bSorcery\b|\bEnchantment\b|\bArtifact\b|\bPlaneswalker\b|\bLand\b|\bBattle\b/i;
   const COPYRIGHT = /©|™|\bWizards\b|\bHasbro\b/i;
   const ONLY_SYMBOLS = /^[\W\d]+$/;
 
@@ -51,7 +52,7 @@ export function extractCardName(ocrText: string): string {
     });
 
   // Prefer a line that looks like a proper card name
-  const CARD_NAME_SHAPE = /^[A-Z][A-Za-z0-9 ',\-]{2,44}$/;
+  const CARD_NAME_SHAPE = /^[A-Z][A-Za-z0-9 ',-]{2,44}$/;
   const strong = candidates.find((l) => CARD_NAME_SHAPE.test(l) && l.length <= 45);
   return strong ?? candidates[0] ?? '';
 }
