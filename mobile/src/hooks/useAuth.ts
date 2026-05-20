@@ -1,10 +1,6 @@
-import { useContext } from 'react';
-
-import AuthContext from '../context/AuthContext';
-import type { AuthContextValue } from '../context/AuthContext';
-
-const useAuth = (): AuthContextValue => {
-  return useContext(AuthContext) as AuthContextValue;
-};
-
-export default useAuth;
+/**
+ * Convenience re-export so existing imports (`useAuth`) continue to work.
+ * The null-check and error message live in AuthContext to keep the logic
+ * in one place — calling this hook outside <AuthProvider> throws immediately.
+ */
+export { useAuthContext as default } from '../context/AuthContext';
