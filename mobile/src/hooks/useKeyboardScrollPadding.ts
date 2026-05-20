@@ -6,7 +6,7 @@ export interface KeyboardScrollPaddingOptions {
 }
 
 export interface UseKeyboardScrollPaddingResult {
-  scrollRef: React.RefObject<ScrollView>;
+  scrollRef: React.RefObject<ScrollView | null>;
   keyboardInset: number;
   contentPadding: { paddingBottom: number };
   scrollToEnd: (delay?: number) => void;

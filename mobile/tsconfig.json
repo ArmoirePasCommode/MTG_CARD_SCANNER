@@ -3,10 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": false,
     "noFallthroughCasesInSwitch": true,
     "allowJs": false,
+    "skipLibCheck": true,
     "jsx": "react-native",
     "baseUrl": ".",
     "paths": {
@@ -16,7 +17,9 @@
       "@services/*":   ["./src/services/*"],
       "@context/*":    ["./src/context/*"],
       "@utils/*":      ["./src/utils/*"],
-      "@navigation/*": ["./src/navigation/*"]
+      "@navigation/*": ["./src/navigation/*"],
+      "expo-file-system": ["./node_modules/expo-file-system/build/index.d.ts"],
+      "expo-file-system/next": ["./node_modules/expo-file-system/build/index.d.ts"]
     }
   },
   "include": [

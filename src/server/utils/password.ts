@@ -9,5 +9,3 @@ export async function hashPassword(plain: string): Promise<string> {
 export async function comparePassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
 }
-
-

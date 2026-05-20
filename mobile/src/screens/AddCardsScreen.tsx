@@ -319,7 +319,7 @@ const PasteTab = ({
       id: newId(),
       uri: null,
       name: p.name,
-      status: STATUS.PENDING as const,
+      status: STATUS.PENDING,
       card: undefined,
       quantity: p.qty,
       isFoil: false,
@@ -361,9 +361,7 @@ const PasteTab = ({
               .filter((e) => e.id !== entry.id);
           }
           return prev.map((e) =>
-            e.id === entry.id
-              ? { ...e, status: STATUS.RECOGNIZED as const, card: card!, error: null }
-              : e
+            e.id === entry.id ? { ...e, status: STATUS.RECOGNIZED, card: card!, error: null } : e
           );
         });
       } catch (err: unknown) {
@@ -372,7 +370,7 @@ const PasteTab = ({
             e.id === entry.id
               ? {
                   ...e,
-                  status: STATUS.FAILED as const,
+                  status: STATUS.FAILED,
                   error: err instanceof Error ? err.message : 'Not found',
                 }
               : e

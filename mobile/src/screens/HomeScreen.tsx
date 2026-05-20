@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   FlatList,
   Modal,
@@ -184,7 +184,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps): React.JSX.Element => {
           ...g,
           totalCards: info?.cardCount ?? 0,
           ownedUnique: g.uniqueIds?.size ?? 0,
-          setName: info?.name ?? g.setName,
+          setName: info?.name ?? g.setName ?? null,
         };
       })
       .sort((a, b) => (a.setName ?? '').localeCompare(b.setName ?? ''));
@@ -210,14 +210,17 @@ const HomeScreen = ({ navigation }: HomeScreenProps): React.JSX.Element => {
 
   const [fabMenuOpen, setFabMenuOpen] = useState(false);
 
-  const { scrollRef: listRef, contentPadding } = useKeyboardScrollPadding({
-    baseBottomPadding: 100,
-  });
+  const { contentPadding } = useKeyboardScrollPadding({ baseBottomPadding: 100 });
+  const flatListRef = useRef<FlatList<Card>>(null);
+  const sectionListRef = useRef<SectionList<Card, SetSectionData>>(null);
   const scrollListTop = useCallback((): void => {
-    (
-      listRef.current as { scrollToOffset?: (opts: { offset: number; animated: boolean }) => void }
-    )?.scrollToOffset?.({ offset: 0, animated: true });
-  }, [listRef]);
+    flatListRef.current?.scrollToOffset?.({ offset: 0, animated: true });
+    if (sectionListRef.current) {
+      try {
+        sectionListRef.current.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: true });
+      } catch {}
+    }
+  }, []);
 
   const greeting = user?.displayName ? `Hello, ${user.displayName}` : 'Your Collection';
 
@@ -345,7 +348,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps): React.JSX.Element => {
       <SafeAreaView style={styles.flex} edges={['top']}>
         {viewMode === 'set' ? (
           <SectionList<Card, SetSectionData>
-            ref={listRef}
+            ref={sectionListRef}
             sections={setSections}
             keyExtractor={(item, index) => item.id ?? item.scryfallId ?? `card-${index}`}
             renderItem={renderCard}
@@ -359,7 +362,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps): React.JSX.Element => {
           />
         ) : (
           <FlatList<Card>
-            ref={listRef}
+            ref={flatListRef}
             data={visible}
             keyExtractor={(item, index) => item.id ?? item.scryfallId ?? `card-${index}`}
             renderItem={renderCard}

@@ -46,7 +46,10 @@ export const formatUsdCompact = (value: number | null | undefined): string => {
  * Falls back to the non-foil USD price if the foil price is missing.
  */
 export const getDisplayPrice = (
-  card: Pick<Card, 'isFoil' | 'priceUsdFoil' | 'priceUsd'> | null | undefined
+  card:
+    | { isFoil?: boolean | null; priceUsdFoil?: number | null; priceUsd?: number | null }
+    | null
+    | undefined
 ): number | null => {
   if (!card) return null;
   if (card.isFoil && card.priceUsdFoil !== null && card.priceUsdFoil !== undefined) {
@@ -55,9 +58,12 @@ export const getDisplayPrice = (
   return card.priceUsd ?? null;
 };
 
-export const cardLineValue = (
-  card: Pick<Card, 'isFoil' | 'priceUsdFoil' | 'priceUsd' | 'quantity'>
-): number => {
+export const cardLineValue = (card: {
+  isFoil?: boolean | null;
+  priceUsdFoil?: number | null;
+  priceUsd?: number | null;
+  quantity?: number | null;
+}): number => {
   const unit = getDisplayPrice(card);
   if (unit === null) return 0;
   const qty = Math.max(1, card.quantity || 1);

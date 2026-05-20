@@ -109,7 +109,7 @@ const CardDetailsScreen = ({ route, navigation }: CardDetailsScreenProps): React
   useEffect(() => {
     if (!isInCollection || !dirty) return undefined;
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    const cardWithId = card as { id: string };
+    const cardWithId = card as unknown as { id: string };
     debounceTimer.current = setTimeout(() => {
       void (async () => {
         try {

@@ -189,7 +189,7 @@ const LiveCameraView = ({
   if (!permission.granted) {
     return (
       <View style={[styles.container, styles.centered, style]}>
-        <Ionicons name="camera-off-outline" size={40} color={colors.textMuted} />
+        <Ionicons name="camera-outline" size={40} color={colors.textMuted} />
         <Text style={styles.permText}>Camera access is required to scan cards.</Text>
         <Pressable
           style={styles.permBtn}

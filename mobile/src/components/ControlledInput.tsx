@@ -23,7 +23,7 @@ interface ControlledInputProps<T extends FieldValues> extends Pick<
   onInputFocus?: () => void;
 }
 
-const ControlledInput = forwardRef(
+const ControlledInputInner = forwardRef(
   <T extends FieldValues>(
     {
       control,
@@ -112,7 +112,13 @@ const ControlledInput = forwardRef(
   }
 );
 
-ControlledInput.displayName = 'ControlledInput';
+// forwardRef erases the generic type parameter — restore it with a cast so
+// consumers can pass a typed Control<TFieldValues> without widening to Control<FieldValues>.
+const ControlledInput = ControlledInputInner as <T extends FieldValues>(
+  props: ControlledInputProps<T> & React.RefAttributes<TextInput>
+) => React.JSX.Element;
+
+(ControlledInput as { displayName?: string }).displayName = 'ControlledInput';
 
 const styles = StyleSheet.create({
   wrapper: {

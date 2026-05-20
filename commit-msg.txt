@@ -1,0 +1,14 @@
+fix: resolve all ci typecheck and prettier failures
+
+- mobile/tsconfig.json: set exactOptionalPropertyTypes and noImplicitOverride
+  to false; add paths for expo-file-system to force compiled .d.ts
+- mobile/index.ts: declare ErrorUtils on global via local type extension
+- useKeyboardScrollPadding: RefObject<ScrollView|null> for React 19
+- HomeScreen: replace listRef with flatListRef and sectionListRef
+- LiveCameraView: replace invalid icon camera-off-outline with camera-outline
+- types/api.ts: add optional displayName field to User
+- CardDetailsScreen: use unknown intermediate for NewCard cast
+- format.ts: broaden getDisplayPrice to accept optional price fields
+- AddCardsScreen: remove invalid STATUS.X as const assertions
+- ControlledInput: restore generic type after forwardRef erasure via cast
+- prettier: format 11 backend files and 2 mobile files

@@ -1,7 +1,11 @@
 import { bucket } from '../db/firestore.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function uploadImageBuffer(ownerId: string, buffer: Buffer, mimeType: string): Promise<string> {
+export async function uploadImageBuffer(
+  ownerId: string,
+  buffer: Buffer,
+  mimeType: string
+): Promise<string> {
   const objectName = `uploads/${ownerId}/${Date.now()}-${uuidv4()}`;
   const file = bucket.file(objectName);
   await file.save(buffer, {
@@ -19,5 +23,3 @@ export async function uploadImageBuffer(ownerId: string, buffer: Buffer, mimeTyp
   });
   return url;
 }
-
-
