@@ -43,7 +43,7 @@ export async function signup(req: AuthenticatedRequest, res: Response): Promise<
     const refreshToken = signRefreshToken({ sub: docRef.id, email });
 
     res.status(201).json({
-      user: { id: docRef.id, email, username },
+      user: { id: docRef.id, email, username, displayName: username },
       accessToken,
       refreshToken,
     });
@@ -77,7 +77,12 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
     const accessToken = signAccessToken({ sub: doc.id, email: String(data['email']) });
     const refreshToken = signRefreshToken({ sub: doc.id, email: String(data['email']) });
     res.status(200).json({
-      user: { id: doc.id, email: data['email'], username: data['username'] },
+      user: {
+        id: doc.id,
+        email: data['email'],
+        username: data['username'],
+        displayName: data['username'],
+      },
       accessToken,
       refreshToken,
     });
@@ -123,6 +128,7 @@ export async function getProfile(req: AuthenticatedRequest, res: Response): Prom
       id: userDoc.id,
       email: data['email'],
       username: data['username'],
+      displayName: data['username'],
       createdAt: data['createdAt'],
     });
   } catch (err: unknown) {
